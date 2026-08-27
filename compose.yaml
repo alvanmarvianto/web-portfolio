@@ -1,0 +1,56 @@
+services:
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    env_file: .env
+    networks: [tl-ops-net]
+    volumes: [minio_data:/data]
+    ports:
+      - "0.0.0.0:9000:9000"
+      - "127.0.0.1:9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    env_file: .env
+    networks: [tl-ops-net]
+    volumes: [./media:/media:ro]
+    entrypoint: ["/bin/sh", "/media/init.sh"]
+
+  db-init:
+    image: postgres:16
+    networks: [tl-ops-net]
+    volumes: [./db:/db:ro]
+    environment:
+      PGHOST: tl-ops-pg
+      PGPORT: 5432
+      PGUSER: postgres
+      PGDATABASE: neon_portfolio
+    command: ["psql", "-v", "ON_ERROR_STOP=1", "-f", "/db/init.sql"]
+
+  portfolio:
+    build: .
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+    networks: [tl-ops-net]
+    environment:
+      DATABASE_URL: postgresql://postgres@tl-ops-pg:5432/neon_portfolio
+      PORT: 8080
+    ports: ["0.0.0.0:8088:8080"]
+    restart: unless-stopped
+
+networks:
+  tl-ops-net:
+    external: true
+volumes:
+  minio_data:

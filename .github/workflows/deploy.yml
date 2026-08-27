@@ -1,0 +1,23 @@
+name: Deploy to Azure
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy
+        env:
+          AZURE_HOST: ${{ secrets.AZURE_HOST }}
+          AZURE_USER: ${{ secrets.AZURE_USER }}
+          AZURE_SSH_KEY: ${{ secrets.AZURE_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s' "$AZURE_SSH_KEY" > ~/.ssh/azure
+          chmod 600 ~/.ssh/azure
+          ssh-keyscan -H "$AZURE_HOST" >> ~/.ssh/known_hosts
+          tar --exclude-vcs --exclude=.env -czf - . | ssh -i ~/.ssh/azure "$AZURE_USER@$AZURE_HOST" 'mkdir -p ~/neon-portfolio && tar -xzf - -C ~/neon-portfolio && cd ~/neon-portfolio && docker compose -f compose.azure.yaml up -d --build'

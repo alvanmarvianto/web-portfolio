@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const app = readFileSync('client/src/main.jsx', 'utf8');
+const css = readFileSync('client/src/styles.css', 'utf8');
+assert.match(css, /\.nav\{[^}]*position:sticky/);
+assert.doesNotMatch(app, /stat-grid|stats/);
+assert.match(app, /<aside className="side-stack">[\s\S]*id="stack"/);
+assert.ok(app.indexOf('className="education panel"') < app.indexOf('id="experience"'));
+assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+assert.match(app, /className="project-content"/);
+assert.match(css, /grid-template-rows:minmax\(210px,1fr\) auto/);
+assert.match(css, /grid-template-areas:none/);
+assert.match(css, /@media\(max-width:760px\)[\s\S]*\.projects\{grid-template-columns:1fr/);
+assert.match(css, /overflow-x:clip/);
+assert.match(css, /\.hero>\*\{min-width:0\}/);
+console.log('layout contract OK');

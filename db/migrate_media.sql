@@ -1,0 +1,10 @@
+BEGIN;
+ALTER TABLE social_link ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE project ADD COLUMN IF NOT EXISTS thumbnail_url TEXT;
+UPDATE social_link SET image_url = CASE label WHEN 'EMAIL' THEN 'https://minio.alvan.my.id/portfolio-assets/icons/email.svg' WHEN 'LINKEDIN' THEN 'https://minio.alvan.my.id/portfolio-assets/icons/linkedin.svg' WHEN 'GITHUB' THEN 'https://minio.alvan.my.id/portfolio-assets/icons/github.svg' END;
+UPDATE project SET thumbnail_url = CASE id WHEN 1 THEN 'https://minio.alvan.my.id/portfolio-assets/projects/event-sync.svg' WHEN 2 THEN 'https://minio.alvan.my.id/portfolio-assets/projects/5g-monitoring.svg' WHEN 3 THEN 'https://minio.alvan.my.id/portfolio-assets/projects/newcity.svg' END;
+ALTER TABLE social_link ALTER COLUMN image_url SET NOT NULL;
+ALTER TABLE project ALTER COLUMN thumbnail_url SET NOT NULL;
+DROP TABLE IF EXISTS project_metric;
+GRANT SELECT, UPDATE ON ALL TABLES IN SCHEMA public TO portfolio_rdbms;
+COMMIT;
