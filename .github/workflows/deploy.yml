@@ -17,7 +17,7 @@ jobs:
           AZURE_SSH_KEY: ${{ secrets.AZURE_SSH_KEY }}
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s' "$AZURE_SSH_KEY" > ~/.ssh/azure
+          printf '%s\n' "$AZURE_SSH_KEY" > ~/.ssh/azure
           chmod 600 ~/.ssh/azure
           ssh-keyscan -H "$AZURE_HOST" >> ~/.ssh/known_hosts
           tar --exclude-vcs --exclude=.env -czf - . | ssh -i ~/.ssh/azure "$AZURE_USER@$AZURE_HOST" 'mkdir -p ~/neon-portfolio && tar -xzf - -C ~/neon-portfolio && cd ~/neon-portfolio && docker compose -f compose.azure.yaml up -d --build'
